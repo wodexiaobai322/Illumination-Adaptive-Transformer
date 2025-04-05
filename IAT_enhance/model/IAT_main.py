@@ -133,8 +133,9 @@ class IAT(nn.Module):
         mul, add = self.local_net(img_low)
         img_high = (img_low.mul(mul)).add(add)
 
+        img_high = self.trans.PHVIT(img_high)
+
         if not self.with_global:
-            img_high = self.trans.PHVIT(img_high)
 
             return mul, add, img_high
 
@@ -146,7 +147,7 @@ class IAT(nn.Module):
                 [self.apply_color(img_high[i, :, :, :], color[i, :, :]) ** gamma[i, :] for i in range(b)], dim=0)
             img_high = img_high.permute(0, 3, 1, 2)  # (B,H,W,C) -- (B,C,H,W)
 
-            img_high = self.trans.PHVIT(img_high)
+
 
             return mul, add, img_high
 
