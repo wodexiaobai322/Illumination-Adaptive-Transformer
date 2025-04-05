@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 from timm.models.layers import trunc_normal_, DropPath, to_2tuple
 import os
-from model.blocks import Mlp
-from .enhancement import RGB_HVI
+from .blocks import Mlp
+from .enhancement import RGB_HVI,Illumination_Estimator
 
 
 class query_Attention(nn.Module):
@@ -97,7 +97,7 @@ class Global_pred(nn.Module):
 
         self.apply(self._init_weights)
 
-        self.trans = RGB_HVI()
+        self.retinex = Illumination_Estimator(40)
 
         for name, p in self.named_parameters():
             if name == 'generator.attn.v.weight':
@@ -115,12 +115,14 @@ class Global_pred(nn.Module):
 
     def forward(self, x):
         #print(self.gamma_base)
-        x = self.trans.HVIT(x)
+
+        illu_fea, illu_map = self.retinex(x)
+
+        x = x + x * illu_map
 
         x = self.conv_large(x)
         x = self.generator(x)
 
-        x = self.trans.PHVIT(x)
 
         gamma, color = x[:, 0].unsqueeze(1), x[:, 1:]
         gamma = self.gamma_linear(gamma).squeeze(-1) + self.gamma_base
