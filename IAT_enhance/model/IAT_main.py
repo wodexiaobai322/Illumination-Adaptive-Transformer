@@ -110,6 +110,8 @@ class IAT(nn.Module):
 
         self.retinex = Illumination_Estimator(40)
 
+        self.trans = RGB_HVI()
+
     def apply_color(self, image, ccm):
         shape = image.shape
         image = image.view(-1, 3)
@@ -121,14 +123,19 @@ class IAT(nn.Module):
         # print(self.with_global)
 
         # apply retinex
-        illu_fea, illu_map = self.retinex(img_low)
+        # illu_fea, illu_map = self.retinex(img_low)
+        #
+        # img_low = img_low + img_low * illu_map
 
-        img_low = img_low + img_low * illu_map
+
+        img_low = self.trans.HVIT(img_low)
 
         mul, add = self.local_net(img_low)
         img_high = (img_low.mul(mul)).add(add)
 
         if not self.with_global:
+            img_high = self.trans.PHVIT(img_high)
+
             return mul, add, img_high
 
         else:
@@ -138,6 +145,9 @@ class IAT(nn.Module):
             img_high = torch.stack(
                 [self.apply_color(img_high[i, :, :, :], color[i, :, :]) ** gamma[i, :] for i in range(b)], dim=0)
             img_high = img_high.permute(0, 3, 1, 2)  # (B,H,W,C) -- (B,C,H,W)
+
+            img_high = self.trans.PHVIT(img_high)
+
             return mul, add, img_high
 
 
