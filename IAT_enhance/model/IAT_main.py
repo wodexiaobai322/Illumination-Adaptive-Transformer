@@ -128,12 +128,12 @@ class IAT(nn.Module):
         # img_low = img_low + img_low * illu_map
 
 
-        img_low = self.trans.HVIT(img_low)
+        # img_low = self.trans.HVIT(img_low)
 
         mul, add = self.local_net(img_low)
         img_high = (img_low.mul(mul)).add(add)
 
-        img_high = self.trans.PHVIT(img_high)
+        # img_high = self.trans.PHVIT(img_high)
 
         if not self.with_global:
 

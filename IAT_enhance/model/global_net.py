@@ -116,9 +116,9 @@ class Global_pred(nn.Module):
     def forward(self, x):
         #print(self.gamma_base)
 
-        illu_fea, illu_map = self.retinex(x)
+        # illu_fea, illu_map = self.retinex(x)
 
-        x = x + x * illu_map
+        # x = x + x * illu_map
 
         x = self.conv_large(x)
         x = self.generator(x)
